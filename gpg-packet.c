@@ -107,6 +107,50 @@ gpg_packet gpg_packet_read(gpg_file *f) {
 	}
 	return ret;
 }
+
+// return bytes
+int gpg_packet_hashsize(int hash_algo) {
+	switch(hash_algo) {
+		case GPG_HASH_ALGO_MD5:
+			return 16;
+		case GPG_HASH_ALGO_SHA1:
+		case GPG_HASH_ALGO_RIPEMD160:
+			return 20;
+		case GPG_HASH_ALGO_SHA224:
+			return 28;
+		case GPG_HASH_ALGO_SHA256:
+			return 32;
+		case GPG_HASH_ALGO_SHA384:
+			return 48;
+		case GPG_HASH_ALGO_SHA512:
+			return 64;
+		default:
+			// We don't know the hash size for this algo
+			assert(0);
+	}
+}
+
+// bytes
+int gpg_packet_keysize(int sym_algo) {
+	switch(sym_algo) {
+//		case GPG_SYM_ALGO_TRIPLEDES:
+//		case GPG_SYM_ALGO_CAST5:
+//		case GPG_SYM_ALGO_BLOWFISH:
+//			return 8;
+//		case GPG_SYM_ALGO_PLAIN:
+		case GPG_SYM_ALGO_AES128:
+			return 16;
+		case GPG_SYM_ALGO_AES192:
+			return 24;
+		// Camellia256
+		case GPG_SYM_ALGO_TWOFISH:
+		case GPG_SYM_ALGO_AES256:
+			return 32;
+		default:
+			// We don't know the key size for this algorithm
+			assert(0);
+	}
+}
 int gpg_packet_blocksize(int sym_algo) {
 	switch(sym_algo) {
 		case GPG_SYM_ALGO_TRIPLEDES:

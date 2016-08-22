@@ -13,7 +13,7 @@ typedef struct gpg_challenge_t {
 	uint32_t count;
 	uint8_t salt[8]; // How many bytes to make of salt+pw+salt+pw... in s2k mode
 
-	uint8_t blocksize;
+	uint8_t blocksize;	// How many bytes per block 
 	uint8_t datalen;
 	uint8_t data[2+(2*MAXBS)]; // one BS for random values, 2 bytes for check, one BS for verification data
 } gpg_challenge;

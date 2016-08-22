@@ -58,5 +58,7 @@ gpg_packet gpg_packet_read(gpg_file *f);
 gpg_packet_tag3 gpg_packet_to_tag3(gpg_packet *p);
 
 int gpg_packet_blocksize(int sym_algo);
+int gpg_packet_keysize(int sym_algo);
+int gpg_packet_hashsize(int hash_algo);
 
 #endif

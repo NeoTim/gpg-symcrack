@@ -33,6 +33,16 @@ gpg_challenge gpg_challenge_read_gpg(const char *fname) {
 	gpg_file_close(&gpgf);
 	return c;
 }
+
+gpg_challenge gpg_challenge_read(const char *fname) {
+	gpg_challenge ret;
+	FILE *fp = fopen(fname, "rb");
+	assert(fp != NULL);
+	assert(fread(&ret, 1, sizeof(ret), fp) == sizeof(ret));
+	fclose(fp);
+	return ret;
+}
+
 void gpg_challenge_write(const gpg_challenge *c, const char *fname) {
 	FILE *fp = fopen(fname, "wb");
 	assert(fp != NULL);
