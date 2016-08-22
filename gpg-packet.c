@@ -2,17 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <endian.h>
-
-//#define GPG_PACKET_OLD false
-//#define GPG_PACKET_NEW true
-
-//typedef struct gpg_packet_t {
-//	bool format;
-//	bool partial;
-//	uint8_t tag;
-//	uint32_t length;
-//	uint8_t *data;
-//} gpg_packet;
+#include <string.h>
 
 void gpg_packet_free(gpg_packet *p) {
 	if(p->data != NULL)
@@ -23,6 +13,34 @@ void gpg_packet_free(gpg_packet *p) {
 	p->length = 0;
 	p->tag = 0;
 	p->partial = false;
+}
+gpg_packet_tag3 gpg_packet_to_tag3(gpg_packet *p) {
+	gpg_packet_tag3 ret;
+
+	uint32_t pos = 0;
+	assert((p->length - pos) >= 4);
+
+	ret.version = p->data[pos++];
+	ret.sym_algo = p->data[pos++];
+	ret.s2k.type = p->data[pos++];
+	ret.s2k.hash_algo = p->data[pos++];
+	assert(ret.s2k.type == GPG_S2K_SIMPLE
+	    || ret.s2k.type == GPG_S2K_SALTED
+	    || ret.s2k.type == GPG_S2K_SALTED_ITERATED);
+
+	if(ret.s2k.type == GPG_S2K_SALTED || ret.s2k.type == GPG_S2K_SALTED_ITERATED) {
+		assert((p->length - pos) >= 8);
+		memcpy(ret.s2k.salt, p->data+pos, 8);
+		pos += 8;
+		if(ret.s2k.type == GPG_S2K_SALTED_ITERATED) {
+			assert((p->length - pos) >= 1);
+			uint8_t cc = p->data[pos++];
+			ret.s2k.count = DECODE_COUNT(cc);
+		}
+	}
+	// Encrypted session key not supported
+	assert((p->length - pos) == 0);
+	return ret;
 }
 gpg_packet gpg_packet_read(gpg_file *f) {
 	gpg_packet ret;
@@ -88,4 +106,21 @@ gpg_packet gpg_packet_read(gpg_file *f) {
 		assert(gpg_file_read(f, ret.data, ret.length) == ret.length);
 	}
 	return ret;
+}
+int gpg_packet_blocksize(int sym_algo) {
+	switch(sym_algo) {
+		case GPG_SYM_ALGO_TRIPLEDES:
+		case GPG_SYM_ALGO_CAST5:
+		case GPG_SYM_ALGO_BLOWFISH:
+			return 8;
+		case GPG_SYM_ALGO_AES128:
+		case GPG_SYM_ALGO_AES192:
+		case GPG_SYM_ALGO_AES256:
+		case GPG_SYM_ALGO_TWOFISH:
+			return 16;
+//		case GPG_SYM_ALGO_PLAIN:
+		default:
+			// We don't know the block size for this algorithm
+			assert(0);
+	}
 }

@@ -1,44 +1,35 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "gpg-file.h"
 #include "gpg-packet.h"
+#include "gpg-challenge.h"
 
-// TODO: move to gpg-algorithms
-#define MAXBS 16
-// TODO: make gpg hashes in gpg-hashes
 
-typedef struct challenge_t {
-	uint8_t algorithm; // 9: AES256 CFB
-	uint8_t symalg; // How to make key from passphrase. 3 = iterated and salted
-	uint8_t hashalg; // Hashing algorithm
-	uint32_t bytecount;
-	uint8_t salt[8]; // How many bytes to make of salt+pw+salt+pw... in s2k mode
-
-	uint8_t datalen;
-	uint8_t data[2+(2*MAXBS)]; // one BS for random values, 2 bytes for check, one BS for verification data
-} challenge;
-
-challenge read_challenge(char *fname) {
-	challenge c;
-	gpg_file gpgf = gpg_file_open(fname);
-	assert(!gpg_file_error(&gpgf));
-
-	// First packet
-	gpg_packet p = gpg_packet_read(&gpgf);
-	printf("New format? %i\n", p.format == GPG_PACKET_NEW);
-
-	gpg_file_close(&gpgf);
-	return c;
-}
-
-int main(int argc, char **argv) {
-	challenge c;
+int main_load(int argc, char **argv) {
 	if(argc < 2) {
-		printf("USAGE: %s <file to crack>\n", argv[0]);
+		printf("load <encrypted.gpg-in> <challenge.bin-out>\n");
 		return 1;
 	}
-	c = read_challenge(argv[1]);
-	printf("algorithm %i\n", c.algorithm);
+	const char *in = argv[0];
+	const char *out = argv[1];
+	gpg_challenge c = gpg_challenge_read_gpg(in);
+	gpg_challenge_write(&c, out);
 	return 0;
+}
+
+int help(const char *program) {
+	printf("USAGE: %s <action>\n", program);
+	main_load(0, NULL);
+	return 1;
+}
+int main(int argc, char **argv) {
+	if(argc < 2) {
+		return help(argv[0]);
+	}
+	if(!strcmp(argv[1], "load"))
+		return main_load(argc-2, argv+2);
+	else
+		return help(argv[0]);
 }
