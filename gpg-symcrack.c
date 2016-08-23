@@ -7,6 +7,7 @@
 #include "gpg-challenge.h"
 #include "gpg-crypto.h"
 #include "gpg-s2k.h"
+#include "gpg-test.h"
 
 int main_test(int argc, char **argv) {
 	if(argc < 2) {
@@ -15,34 +16,15 @@ int main_test(int argc, char **argv) {
 	}
 	const char *in = argv[0];
 	const char *pw = argv[1];
-	gpg_challenge c = gpg_challenge_read(in);
 
-	// Make the key
-	uint8_t key[gpg_packet_keysize(c.sym_algo)];
-	gpg_s2k_state s2k = gpg_s2k_new(&c);
-	gpg_s2k(&s2k, key, pw);
-	gpg_s2k_free(&s2k);
-
-	// Make aes
-	gpg_crypto_state cs = gpg_crypto_new(c.sym_algo);
-	gpg_crypto_key(&cs, key);
-
-	// Execute some steps
-	uint8_t FR[cs.blocksize];
-	uint8_t plain[cs.blocksize];
-	uint16_t cmp1, cmp2;
-
-	memset(FR, 0, cs.blocksize);                    // 1 set zero IV
-	gpg_crypto_iv(&cs, FR);
-	gpg_crypto_decrypt(&cs, c.data, plain);		// 2 decrypt c.data
-	memcpy(&cmp1, plain+cs.blocksize-2, 2);		// 3 save 1
-	gpg_crypto_iv(&cs, c.data);			// 4 iv with c.data
-	gpg_crypto_decrypt(&cs,
-			c.data+cs.blocksize, plain);	// 5 decrypt c.data+cs.blocksize
-	memcpy(&cmp2, plain, 2);			// 6 save 2
-	printf("%i vs %i\n", cmp1, cmp2);
-
-	gpg_crypto_delete(&cs);
+	gpg_test_state ts = gpg_test_new(gpg_challenge_read(in));
+	gpg_test_setpw(&ts, pw);
+	if(gpg_test_test1(&ts)) {
+		printf("Probably correct password\n");
+	} else {
+		printf("Wrong password\n");
+	}
+	gpg_test_delete(&ts);
 
 	return 0;
 }
