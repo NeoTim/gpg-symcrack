@@ -41,5 +41,4 @@ bool gpg_test_test2(gpg_test_state *ts);
 
 void gpg_test_delete(gpg_test_state *ts) {
 	gpg_crypto_delete(&ts->crypto);
-	gpg_s2k_free(&ts->s2k);
 }

@@ -16,9 +16,16 @@ void gpg_s2k(gpg_s2k_state *s, uint8_t *outkey, const char *pw) {
 				uint8_t key[s->contexts*s->hashlen];
 				gpg_crypto_hasher h[s->contexts];
 
-				// step 1: copy hashers
-				for(i = 0; i < s->contexts; i++)
-					h[i] = gpg_crypto_hasher_copy(&s->h[i]);
+				// step 1: create hashers
+				for(i = 0; i < s->contexts; i++) {
+					h[i] = gpg_crypto_hasher_new(s->hash_algo);
+					h[i].init(&h[i]);
+					if(i > 0) {
+						uint8_t zero[i];
+						memset(zero, 0, i);
+						h[i].update(&h[i], zero, i);
+					}
+				}
 
 				// step 2: create prototype
 				memcpy(prototype, s->salt, 8);
@@ -57,6 +64,7 @@ gpg_s2k_state gpg_s2k_new(const gpg_challenge *c) {
 	ret.type = c->s2k_type;
 	memcpy(ret.salt, c->salt, 8);
 	ret.count = c->count;
+	ret.hash_algo = c->hash_algo;
 
 	// step 2: find num contexts and set them up.
 	ret.hashlen = gpg_packet_hashsize(c->hash_algo);
@@ -68,22 +76,5 @@ gpg_s2k_state gpg_s2k_new(const gpg_challenge *c) {
 	assert(ret.contexts > 0);
 	assert(ret.contexts <= MAXCONTEXTS);
 
-	uint32_t i;
-	for(i = 0; i < ret.contexts; i++) {
-		ret.h[i] = gpg_crypto_hasher_new(c->hash_algo);
-		ret.h[i].init(&ret.h[i]);
-		if(i > 0) {
-			uint8_t zero[i];
-			memset(zero, 0, i);
-			ret.h[i].update(&ret.h[i], zero, i);
-		}
-	}
 	return ret;
-}
-
-void gpg_s2k_free(gpg_s2k_state *s) {
-	int i;
-	for(i = 0; i < s->contexts; i++) {
-		gpg_crypto_hasher_delete(&s->h[i]);
-	}
 }

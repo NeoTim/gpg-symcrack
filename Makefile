@@ -2,7 +2,6 @@
 PKGCONFIG=glib-2.0 openssl
 CC=gcc
 CFLAGS=-O3 -march=native -Wall -Wextra -Werror `pkg-config --cflags $(PKGCONFIG)`
-#CFLAGS=-O3 -g3 -Wall -Wextra -Werror `pkg-config --cflags $(PKGCONFIG)`
 LDLIBS=`pkg-config --libs $(PKGCONFIG)`
 
 .PHONY: all clean
@@ -28,7 +27,7 @@ gpg-crypto.o: gpg-crypto.c gpg-crypto.h gpg-packet.h
 
 gpg-s2k.o: gpg-s2k.c gpg-s2k.h gpg-packet.h gpg-crypto.h
 
-gpg-test.o: gpg-test.c gpg-test.h
+gpg-test.o: gpg-test.c gpg-test.h gpg-s2k.h
 
 gpg-packet.h: gpg-file.h
 
