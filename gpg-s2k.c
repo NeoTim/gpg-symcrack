@@ -10,38 +10,40 @@ void gpg_s2k(gpg_s2k_state *s, uint8_t *outkey, const char *pw) {
 	switch(s->type) {
 		case GPG_S2K_SALTED_ITERATED:
 			{
-				// step 1: create tohash
 				uint8_t prototype[len+8];
+				uint8_t tohash[s->count];
+				uint32_t i;
+				uint8_t key[s->contexts*s->hashlen];
+				gpg_crypto_hasher h[s->contexts];
+
+				// step 1: copy hashers
+				for(i = 0; i < s->contexts; i++)
+					h[i] = gpg_crypto_hasher_copy(&s->h[i]);
+
+				// step 2: create prototype
 				memcpy(prototype, s->salt, 8);
 				memcpy(prototype+8, pw, len);
 				len += 8; // count len as the whole prototype
 
-				uint8_t tohash[s->count];
-
-				uint32_t i;
-				// Copy most
-				for(i = 0; i < s->count/len; i++) {
+				// step 2: repeat the prototype -> tohash
+				for(i = 0; i < s->count/len; i++)
 					memcpy(tohash + i*len, prototype, len);
-				}
-				// Copy remainder
-				memcpy(tohash + i*len, prototype, (s->count - i*len));
+				memcpy(tohash + i*len, prototype, s->count % len);
 
-				// We have preinitialized hashers but need to copy them now
-				gpg_crypto_hasher h[s->contexts];
-				for(i = 0; i < s->contexts; i++) {
-					h[i] = gpg_crypto_hasher_copy(&s->h[i]);
-				}
-
-				uint8_t key[s->contexts*s->hashlen];
 				// step 3: hash everything
 				for(i = 0; i < s->contexts; i++) {
 					h[i].update(&h[i], tohash, s->count);
-					h[i].final(&h[i], key + i*s->hashlen);
-					gpg_crypto_hasher_delete(&h[i]);
 				}
 
-				// step 4: copy to outkey
+				// step 4: export
+				for(i = 0; i < s->contexts; i++)
+					h[i].final(&h[i], key + i*s->hashlen);
 				memcpy(outkey, key, s->keylen);
+
+				// step 5: clean up
+				for(i = 0; i < s->contexts; i++) {
+					gpg_crypto_hasher_delete(&h[i]);
+				}
 				return;
 			}
 		default:
