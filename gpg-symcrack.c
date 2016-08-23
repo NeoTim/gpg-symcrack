@@ -10,18 +10,18 @@
 #include "gpg-test.h"
 
 int main_sha1(int argc, char **argv __attribute__((unused))) {
+	int i;
+	uint8_t test[65536];
 	if(argc < 0) {
-		printf("sha1 - Test speed of sha1. 10000MiB\n");
+		printf("sha1 - Test speed of sha1. 12500MiB (same as 100k guesses * 128kB)\n");
 		return 1;
 	}
-	uint8_t test[65536];
-	memset(test, 0, sizeof(test));
-	int i;
 	gpg_crypto_hasher h = gpg_crypto_hasher_new(GPG_HASH_ALGO_SHA1);
 	h.init(&h);
-	for(i = 0; i < 160000; i++) {
+
+	memset(test, 0, sizeof(test));
+	for(i = 0; i < 2 * 100000; i++)
 		h.update(&h, test, sizeof(test));
-	}
 	uint8_t digest[h.outbytes];
 	h.final(&h, digest);
 	gpg_crypto_hasher_delete(&h);

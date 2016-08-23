@@ -1,0 +1,13 @@
+sha1 tested 16.194 seconds
+test2 tested 18.349 seconds
+
+this is 16.194 seconds sha1,
+         2.155 seconds everything else.
+
+Per guess:
+	162µs sha1 + 21.55 µs everything else (stdin, string multiplication, AES, ...)
+	183.49 µs total/guess
+	in other words:
+		46403.7  everything else/s
+		 6172    sha1/s
+		 5449.89 total/s
