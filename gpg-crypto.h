@@ -33,7 +33,8 @@ struct gpg_crypto_state_t {
 // Create a new
 gpg_crypto_state gpg_crypto_new(int type);
 void gpg_crypto_key(gpg_crypto_state *cs, uint8_t *key);
-void gpg_crypto_encrypt(gpg_crypto_state *cs, uint8_t *src, uint8_t *dst);
+void gpg_crypto_iv(gpg_crypto_state *cs, uint8_t *iv);
+void gpg_crypto_decrypt(gpg_crypto_state *cs, uint8_t *src, uint8_t *dst);
 void gpg_crypto_delete(gpg_crypto_state *cs);
 
 void gpg_crypto_xor(uint8_t *src1, uint8_t *src2, uint8_t *dst, uint32_t size);

@@ -73,21 +73,24 @@ gpg_crypto_state gpg_crypto_new(int type) {
 	const EVP_CIPHER *cipher;
 	switch(type) {
 		case GPG_SYM_ALGO_AES256:
-			cipher = EVP_aes_256_ecb();
+			cipher = EVP_aes_256_cfb();
 			break;
 		default:
 			assert(0);
 	}
 
-	EVP_EncryptInit_ex(ret.ctx, cipher, NULL, NULL, NULL);
+	EVP_DecryptInit_ex(ret.ctx, cipher, NULL, NULL, NULL);
 	return ret;
 }
 void gpg_crypto_key(gpg_crypto_state *cs, uint8_t *key) {
-	assert(EVP_EncryptInit_ex(cs->ctx, NULL, NULL, key, NULL));
+	assert(EVP_DecryptInit_ex(cs->ctx, NULL, NULL, key, NULL));
 }
-void gpg_crypto_encrypt(gpg_crypto_state *cs, uint8_t *src, uint8_t *dst) {
+void gpg_crypto_iv(gpg_crypto_state *cs, uint8_t *iv) {
+	assert(EVP_DecryptInit_ex(cs->ctx, NULL, NULL, NULL, iv));
+}
+void gpg_crypto_decrypt(gpg_crypto_state *cs, uint8_t *src, uint8_t *dst) {
 	int outlen = cs->blocksize;
-	assert(EVP_EncryptUpdate(cs->ctx, dst, &outlen, src, cs->blocksize));
+	assert(EVP_DecryptUpdate(cs->ctx, dst, &outlen, src, cs->blocksize));
 }
 void gpg_crypto_delete(gpg_crypto_state *cs) {
 	EVP_CIPHER_CTX_free(cs->ctx);

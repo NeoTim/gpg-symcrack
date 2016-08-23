@@ -33,4 +33,4 @@ gpg-s2k.o: gpg-s2k.c gpg-s2k.h gpg-packet.h gpg-crypto.h
 
 gpg-packet.h: gpg-file.h
 
-gpg-s2k.h: gpg-challenge.h
+gpg-s2k.h: gpg-challenge.h gpg-crypto.h
