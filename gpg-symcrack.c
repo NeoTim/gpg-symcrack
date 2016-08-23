@@ -6,6 +6,7 @@
 #include "gpg-packet.h"
 #include "gpg-challenge.h"
 #include "gpg-crypto.h"
+#include "gpg-s2k.h"
 
 int main_test(int argc, char **argv) {
 	if(argc < 2) {
@@ -16,20 +17,30 @@ int main_test(int argc, char **argv) {
 	const char *pw = argv[1];
 	gpg_challenge c = gpg_challenge_read(in);
 
-	gpg_crypto_hasher h = gpg_crypto_hasher_new(c.hash_algo);
-	uint8_t out[h.outbytes];
-	h.init(&h);
-	h.update(&h, pw, strlen(pw));
-	h.final(&h, out);
-	gpg_crypto_hasher_delete(&h);
+	// Make the key
+	uint8_t key[gpg_packet_keysize(c.sym_algo)];
+	gpg_s2k(key, &c, pw);
 
+	// Make aes
+	gpg_crypto_state cs = gpg_crypto_new(c.sym_algo);
+	gpg_crypto_key(&cs, key);
 
-	uint32_t i;
-	for(i = 0; i < sizeof(out); i++)
-		printf("%02x", out[i]);
-	printf("\n");
+	// Execute some steps
+	uint8_t FR[cs.blocksize];
+	uint8_t FRE[cs.blocksize];
+	memset(FR, 0, cs.blocksize);                    // 1 IV
+	gpg_crypto_encrypt(&cs, FR, FRE);               // 2 create keystream
+	gpg_crypto_xor(FRE, c.data, FRE, cs.blocksize); // 3 xor to get random data
+	uint16_t cmp1, cmp2;
+	memcpy(&cmp1, FRE+cs.blocksize-2, 2);           // 4 save random data
+	memcpy(FR, c.data, cs.blocksize);               // 5 load next block
+	gpg_crypto_encrypt(&cs, FR, FRE);               // 6 create keystream
+	gpg_crypto_xor(FRE, c.data+cs.blocksize, FRE, 2);// 7 xor to get confirmation
+	memcpy(&cmp2, FRE, 2);
+	printf("%i vs %i\n", cmp1, cmp2);
 
-	printf("haha lol I was just joking :3 %i %s\n", c.sym_algo, pw);
+	gpg_crypto_delete(&cs);
+
 	return 0;
 }
 
@@ -52,6 +63,7 @@ int help(const char *program) {
 	return 1;
 }
 int main(int argc, char **argv) {
+	gpg_crypto_init();
 	if(argc < 2) {
 		return help(argv[0]);
 	}

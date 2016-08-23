@@ -20,14 +20,14 @@ gpg_challenge gpg_challenge_read_gpg(const char *fname) {
 	c.hash_algo = t3.s2k.hash_algo;
 	c.count = t3.s2k.count;
 	memcpy(c.salt, t3.s2k.salt, 8);
-	c.blocksize = gpg_packet_blocksize(c.sym_algo);
+	int bs = gpg_packet_blocksize(c.sym_algo);
 
 	p = gpg_packet_read(&gpgf);
 	assert(p.tag == 18);
 	assert(p.data[0] == 1);
-	assert(p.length >= (uint32_t)(3 + 2*c.blocksize));
-	memcpy(c.data, p.data+1, 2 + 2*c.blocksize);
-	c.datalen = 2 + 2*c.blocksize;
+	assert(p.length >= (uint32_t)(3 + 2*bs));
+	memcpy(c.data, p.data+1, 2 + 2*bs);
+	c.datalen = 2 + 2*bs;
 	gpg_packet_free(&p);
 
 	gpg_file_close(&gpgf);

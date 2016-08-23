@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <memory.h>
 
+#include <openssl/evp.h>
+#include <openssl/err.h>
 
 // Hashing algorithms
 void gpg_crypto_sha1_init  (gpg_crypto_hasher *c)                                  { blk_SHA1_Init(c->private);               }
@@ -54,3 +56,47 @@ void gpg_crypto_hasher_delete(gpg_crypto_hasher *src) {
 }
 
 // Encryption algorithms
+
+void gpg_crypto_init() {
+	OpenSSL_add_all_algorithms();
+	ERR_load_crypto_strings();
+}
+
+gpg_crypto_state gpg_crypto_new(int type) {
+	gpg_crypto_state ret;
+	ret.type = type;
+	ret.keylen = gpg_packet_keysize(type);
+	ret.blocksize = gpg_packet_blocksize(type);
+	ret.ctx = EVP_CIPHER_CTX_new();
+	assert(ret.ctx != NULL);
+
+	const EVP_CIPHER *cipher;
+	switch(type) {
+		case GPG_SYM_ALGO_AES256:
+			cipher = EVP_aes_256_ecb();
+			break;
+		default:
+			assert(0);
+	}
+
+	EVP_EncryptInit_ex(ret.ctx, cipher, NULL, NULL, NULL);
+	return ret;
+}
+void gpg_crypto_key(gpg_crypto_state *cs, uint8_t *key) {
+	assert(EVP_EncryptInit_ex(cs->ctx, NULL, NULL, key, NULL));
+}
+void gpg_crypto_encrypt(gpg_crypto_state *cs, uint8_t *src, uint8_t *dst) {
+	int outlen = cs->blocksize;
+	assert(EVP_EncryptUpdate(cs->ctx, dst, &outlen, src, cs->blocksize));
+}
+void gpg_crypto_delete(gpg_crypto_state *cs) {
+	EVP_CIPHER_CTX_free(cs->ctx);
+}
+
+void gpg_crypto_xor(uint8_t *s1, uint8_t *s2, uint8_t *dst, uint32_t size) {
+	while(size > 0) {
+		*dst = *s1 ^ *s2;
+		size--;
+		dst++; s1++; s2++;
+	}
+}
