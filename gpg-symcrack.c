@@ -10,12 +10,12 @@
 #include "gpg-test.h"
 
 int main_sha1(int argc, char **argv __attribute__((unused))) {
-	int i;
-	uint8_t test[65536];
+	uint64_t i;
 	if(argc < 0) {
 		printf("sha1 - Test speed of sha1. 12500MiB (same as 100k guesses * 128kB)\n");
 		return 1;
 	}
+	uint8_t test[65536];
 	gpg_crypto_hasher h = gpg_crypto_hasher_new(GPG_HASH_ALGO_SHA1);
 	h.init(&h);
 
@@ -78,6 +78,27 @@ int main_test(int argc, char **argv) {
 	return 0;
 }
 
+int main_makehash(int argc, char **argv) {
+	if(argc < 1) {
+		printf("makehash <encrypted.gpg> - Convert an encrypted file into a challenge hash, print it\n");
+		return 1;
+	}
+	const char *in = argv[0];
+	uint32_t hashsize = 4*16;
+	uint8_t hash[hashsize];
+	uint32_t i;
+
+	gpg_challenge c = gpg_challenge_read_gpg(in);
+	assert(sizeof(c) <= hashsize);
+	memset(hash, 0, hashsize);
+	memcpy(hash, &c, sizeof(c));
+	for(i = 0; i < hashsize; i++) {
+		printf("%02x", hash[i]);
+	}
+	printf("\n");
+	return 0;
+}
+
 int main_convert(int argc, char **argv) {
 	if(argc < 2) {
 		printf("convert <encrypted.gpg-in> <challenge.bin-out> - Convert an encrypted file into a challenge file\n");
@@ -96,6 +117,7 @@ int help(const char *program) {
 	printf("\t"); main_test(-1, NULL);
 	printf("\t"); main_test2(-1, NULL);
 	printf("\t"); main_sha1(-1, NULL);
+	printf("\t"); main_makehash(-1, NULL);
 	return 1;
 }
 int main(int argc, char **argv) {
@@ -111,6 +133,8 @@ int main(int argc, char **argv) {
 		return main_test2(argc-2, argv+2);
 	else if(!strcmp(argv[1], "sha1"))
 		return main_sha1(argc-2, argv+2);
+	else if(!strcmp(argv[1], "makehash"))
+		return main_makehash(argc-2, argv+2);
 	else
 		return help(argv[0]);
 }

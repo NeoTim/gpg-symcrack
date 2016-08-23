@@ -11,3 +11,8 @@ Per guess:
 		46403.7  everything else/s
 		 6172    sha1/s
 		 5449.89 total/s
+
+
+sha1 tested 15.705, 87.2% of total time
+total tested 18.012, 12.8% spent outside sha1
+Speed was 5552/s
