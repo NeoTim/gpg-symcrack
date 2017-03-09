@@ -11,18 +11,21 @@
 
 int main_sha1(int argc, char **argv __attribute__((unused))) {
 	uint64_t i;
+
 	if(argc < 0) {
 		printf("sha1 - Test speed of sha1. 12500MiB (same as 100k guesses * 128kB)\n");
 		return 1;
 	}
 	uint8_t test[65536];
 	gpg_crypto_hasher h = gpg_crypto_hasher_new(GPG_HASH_ALGO_SHA1);
+
 	h.init(&h);
 
 	memset(test, 0, sizeof(test));
 	for(i = 0; i < 2 * 100000; i++)
 		h.update(&h, test, sizeof(test));
 	uint8_t digest[h.outbytes];
+
 	h.final(&h, digest);
 	gpg_crypto_hasher_delete(&h);
 	return 0;
@@ -38,12 +41,13 @@ int main_test2(int argc, char **argv) {
 	gpg_test_state ts = gpg_test_new(gpg_challenge_read(in));
 
 	char pw[BUFSIZ];
+
 	do {
 		if(fgets(pw, BUFSIZ, stdin) == NULL)
 			break;
+
 		int len;
-		for(len = strlen(pw); pw[len-1] == '\n' || pw[len-1] == '\r'; len--) {
-		}
+		for(len = strlen(pw); pw[len-1] == '\n' || pw[len-1] == '\r'; len--) { }
 		pw[len] = 0;
 
 		gpg_test_setpw(&ts, pw);
@@ -56,6 +60,7 @@ int main_test2(int argc, char **argv) {
 
 	return 0;
 }
+
 int main_test(int argc, char **argv) {
 	if(argc < 2) {
 		printf("test <challenge.bin-in> <password> - Test a password on a challenge file\n");
@@ -89,6 +94,7 @@ int main_makehash(int argc, char **argv) {
 	uint32_t i;
 
 	gpg_challenge c = gpg_challenge_read_gpg(in);
+
 	assert(sizeof(c) <= hashsize);
 	memset(hash, 0, hashsize);
 	memcpy(hash, &c, sizeof(c));
@@ -107,6 +113,7 @@ int main_convert(int argc, char **argv) {
 	const char *in = argv[0];
 	const char *out = argv[1];
 	gpg_challenge c = gpg_challenge_read_gpg(in);
+
 	gpg_challenge_write(&c, out);
 	return 0;
 }
@@ -120,6 +127,7 @@ int help(const char *program) {
 	printf("\t"); main_makehash(-1, NULL);
 	return 1;
 }
+
 int main(int argc, char **argv) {
 	gpg_crypto_init();
 	if(argc < 2) {
