@@ -6,6 +6,15 @@
 #define GPG_PACKET_OLD false
 #define GPG_PACKET_NEW true
 
+#define GPG_TAG_RESERVED	0
+#define GPG_TAG_PK_SK		1	// Public-Key Encrypted Session Key Packet
+#define	GPG_TAG_SIG		2	// Signature Packet
+#define GPG_TAG_SK_SK		3	// Symmetric-Key Encrypted Session Key Packet
+#define GPG_TAG_OP_S		4	// One-Pass Signature Packet
+// ...
+#define GPG_TAG_SIP_D		18	// Sym. Enc & Integrity Prot. Data Packet
+// ... incomplete
+
 #define GPG_SYM_ALGO_PLAIN	0
 #define GPG_SYM_ALGO_IDEA	1
 #define GPG_SYM_ALGO_TRIPLEDES	2	// 168 bit key derived from 192
