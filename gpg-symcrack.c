@@ -13,7 +13,7 @@ int main_sha1(int argc, char **argv __attribute__((unused))) {
 	uint64_t i;
 
 	if(argc < 0) {
-		printf("sha1 - Test speed of sha1. 12500MiB (same as 100k guesses * 128kB)\n");
+		printf("sha1                                           - Test speed of sha1. 12500MiB (same as 100k guesses * 128kB)\n");
 		return 1;
 	}
 	uint8_t test[65536];
@@ -33,7 +33,7 @@ int main_sha1(int argc, char **argv __attribute__((unused))) {
 
 int main_test2(int argc, char **argv) {
 	if(argc < 1) {
-		printf("test2 <challenge.bin-in> - Test a passwords from stdin. One per line\n");
+		printf("test2   <challenge.bin-in>                     - Test a passwords from stdin. One per line\n");
 		return 1;
 	}
 	const char *in = argv[0];
@@ -63,7 +63,7 @@ int main_test2(int argc, char **argv) {
 
 int main_test(int argc, char **argv) {
 	if(argc < 2) {
-		printf("test <challenge.bin-in> <password> - Test a password on a challenge file\n");
+		printf("test    <challenge.bin-in> <password>          - Test a password on a challenge file\n");
 		return 1;
 	}
 	const char *in = argv[0];
@@ -83,9 +83,10 @@ int main_test(int argc, char **argv) {
 	return 0;
 }
 
+// This was going to convert the information to a hashcat compatible format..
 int main_makehash(int argc, char **argv) {
 	if(argc < 1) {
-		printf("makehash <encrypted.gpg> - Convert an encrypted file into a challenge hash, print it\n");
+		printf("makehash <encrypted.gpg>                       - Convert an encrypted file into a challenge hash, print it\n");
 		return 1;
 	}
 	const char *in = argv[0];
